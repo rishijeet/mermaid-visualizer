@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f3f4f6;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background-color: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+/* Grid pattern background */
+.grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(156, 163, 175, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(75, 85, 99, 0.2) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.dark .grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(75, 85, 99, 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(75, 85, 99, 0.2) 1px, transparent 1px);
+}
+
+/* Monaco Editor theme override */
+.monaco-editor {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.monaco-editor .margin {
+  background-color: #f9fafb;
+}
+
+.dark .monaco-editor .margin {
+  background-color: #1e293b;
+}
+
+.monaco-editor .monaco-editor-background {
+  background-color: #ffffff;
+}
+
+.dark .monaco-editor .monaco-editor-background {
+  background-color: #111827;
+}
+
+/* Node animations */
+.node-enter {
+  animation: nodeEnter 0.3s ease-out forwards;
+}
+
+@keyframes nodeEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Edge animations */
+.edge-path {
+  transition: all 0.3s ease;
+}
+
+.edge-path:hover {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+}
+
+/* Floating toolbar */
+.floating-toolbar {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Glass morphism effect */
+.glass {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Selection highlight */
+.node-selected {
+  filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.6));
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+/* Hover states */
+.node-hover {
+  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.4));
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
+/* Loading states */
+.loading-dots::after {
+  content: '';
+  animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+  0%, 20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%, 100% { content: '...'; }
+}
