@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Download, 
-  Maximize2, 
-  Sun, 
-  Moon, 
+  Download as File,
+  Download as Download,
+  Maximize2,
+  Sun,
+  Moon,
   Settings,
   Zap,
   Grid3X3
@@ -61,14 +62,13 @@ export const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
           {/* Export Button */}
           <div className="relative">
             <motion.button
-              className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="w-4 h-4 flex items-center space-x-2"
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
               onClick={() => setShowExportMenu(!showExportMenu)}
             >
-              <Download className="w-4 h-4" />
-              <span>Export</span>
+              <span>Export as PNG</span>
             </motion.button>
 
             <AnimatePresence>

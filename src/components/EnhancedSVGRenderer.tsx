@@ -10,6 +10,7 @@ interface EnhancedSVGRendererProps {
   onNodeDrag?: (nodeId: string, position: { x: number; y: number }) => void;
   selectedNode?: string;
   onNodeSelect?: (nodeId: string | undefined) => void;
+  svgRef?: React.RefObject<SVGSVGElement>;
 }
 
 /**
@@ -21,14 +22,18 @@ export const EnhancedSVGRenderer: React.FC<EnhancedSVGRendererProps> = ({
   onViewportChange,
   onNodeDrag,
   selectedNode,
-  onNodeSelect
+  onNodeSelect,
+  svgRef
 }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
+  const internalSvgRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedNode, setDraggedNode] = useState<string | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [viewportStart, setViewportStart] = useState({ x: 0, y: 0 });
   const { isDark } = useTheme();
+
+  // Use the passed ref if available, otherwise use internal ref
+  const svgRefToUse = svgRef as React.RefObject<SVGSVGElement> || internalSvgRef;
 
   // Determine node type based on label and shape
   const getNodeType = useCallback((node: GraphNode): 'start' | 'process' | 'decision' | 'error' => {
@@ -74,7 +79,7 @@ export const EnhancedSVGRenderer: React.FC<EnhancedSVGRendererProps> = ({
 
   // Handle pan start
   const handlePanStart = useCallback((e: React.MouseEvent) => {
-    if (e.target === svgRef.current || (e.target as Element).tagName === 'g') {
+    if (e.target === svgRefToUse.current || (e.target as Element).tagName === 'g') {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
       setViewportStart({ x: viewport.translateX, y: viewport.translateY });
@@ -364,7 +369,7 @@ export const EnhancedSVGRenderer: React.FC<EnhancedSVGRendererProps> = ({
   return (
     <div className="enhanced-svg-renderer w-full h-full overflow-hidden bg-gray-50 dark:bg-gray-900 grid-pattern">
       <svg
-        ref={svgRef}
+        ref={svgRefToUse}
         width="100%"
         height="100%"
         onWheel={handleWheel}

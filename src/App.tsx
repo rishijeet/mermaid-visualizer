@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EnhancedMermaidEditor } from './components/EnhancedMermaidEditor';
 import { EnhancedSVGRenderer } from './components/EnhancedSVGRenderer';
@@ -34,6 +34,8 @@ const AppContent: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<string | undefined>();
   const [showMinimap, setShowMinimap] = useState(true);
   const [layoutBounds, setLayoutBounds] = useState({ width: 800, height: 600 });
+  const [svgElementAvailable, setSvgElementAvailable] = useState(false);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   // Debounce Mermaid code changes to avoid excessive re-parsing
   const debouncedCode = useDebounce(mermaidCode, 300);
@@ -52,30 +54,17 @@ const AppContent: React.FC = () => {
     }
   }, [debouncedCode]);
 
-  // Handle viewport changes
-  const handleViewportChange = useCallback((newViewport: ViewportState) => {
-    setViewport(newViewport);
-  }, []);
-
-  // Handle node dragging
-  const handleNodeDrag = useCallback((nodeId: string, position: { x: number; y: number }) => {
-    setLayoutedGraph(prev => ({
-      ...prev,
-      nodes: prev.nodes.map(node => 
-        node.id === nodeId 
-          ? { ...node, position, isDragged: true }
-          : node
-      )
-    }));
-  }, []);
-
+  // Check if SVG element is available
+  React.useEffect(() => {
+    const element = svgRef.current;
+    setSvgElementAvailable(!!element);
+  }, [svgRef.current]);
+    
   // Export functionality
   const exportSVG = useCallback(() => {
     try {
-      // Try multiple selectors to find the diagram SVG
-      const svgElement = document.querySelector('#root svg') || 
-                        document.querySelector('.enhanced-svg-renderer svg') ||
-                        document.querySelector('svg');
+      // Use the ref to access the SVG element directly
+      const svgElement = svgRef.current;
       
       if (!svgElement) {
         console.warn('SVG element not found for export');
@@ -91,7 +80,6 @@ const AppContent: React.FC = () => {
       a.click();
       URL.revokeObjectURL(url);
       
-      console.log('SVG exported successfully');
     } catch (error) {
       console.error('SVG export failed:', error);
     }
@@ -99,25 +87,52 @@ const AppContent: React.FC = () => {
 
   const exportPNG = useCallback(() => {
     try {
-      // Try multiple selectors to find the diagram SVG
-      const svgElement = document.querySelector('#root svg') || 
-                        document.querySelector('.enhanced-svg-renderer svg') ||
-                        document.querySelector('svg');
-      
+      // Use the ref to access the SVG element directly
+      const svgElement = svgRef.current;
       if (!svgElement) {
         console.warn('SVG element not found for PNG export');
         return;
       }
       
-      const svgData = new XMLSerializer().serializeToString(svgElement);
+      // Get the actual SVG dimensions
+      const svgRect = svgElement.getBoundingClientRect();
+      const svgWidth = svgRect.width;
+      const svgHeight = svgRect.height;
+      
+      // Create a high-resolution canvas (2x scale for better quality)
+      const scale = 2;
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        return;
+      }
+      
+      canvas.width = svgWidth * scale;
+      canvas.height = svgHeight * scale;
+      
+      // Set white background
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Scale the context for high DPI
+      ctx.scale(scale, scale);
+      
+      // Serialize SVG and create image
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      
       const img = new Image();
       
       img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
+        // Draw the image on canvas
+        ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
+        
+        // Clean up SVG URL
+        URL.revokeObjectURL(svgUrl);
+        
+        // Convert canvas to PNG
         canvas.toBlob((blob) => {
           if (blob) {
             const url = URL.createObjectURL(blob);
@@ -126,16 +141,36 @@ const AppContent: React.FC = () => {
             a.download = 'diagram.png';
             a.click();
             URL.revokeObjectURL(url);
-            
-            console.log('PNG exported successfully');
           }
-        });
+        }, 'image/png', 0.9); // Quality: 0.9
       };
       
-      img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+      img.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
+      };
+      
+      img.src = svgUrl;
+      
     } catch (error) {
       console.error('PNG export failed:', error);
     }
+  }, []);
+
+  // Handle viewport changes
+  const handleViewportChange = useCallback((newViewport: ViewportState) => {
+    setViewport(newViewport);
+  }, []);
+
+  // Handle node dragging
+  const handleNodeDrag = useCallback((nodeId: string, position: { x: number; y: number }) => {
+    setLayoutedGraph(prev => ({
+      ...prev,
+      nodes: prev.nodes.map(node => 
+        node.id === nodeId 
+          ? { ...node, position, isDragged: true }
+          : node
+      )
+    }));
   }, []);
 
   // Fit to screen
@@ -188,6 +223,11 @@ const AppContent: React.FC = () => {
             onChange={setMermaidCode}
             error={parseResult.error?.message}
           />
+          {svgElementAvailable && (
+            <div className="absolute top-2 right-2 bg-green-500 dark:bg-green-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+              SVG Ready
+            </div>
+          )}
         </motion.div>
 
         {/* Renderer Panel */}
@@ -214,6 +254,7 @@ const AppContent: React.FC = () => {
                   onNodeDrag={handleNodeDrag}
                   selectedNode={selectedNode}
                   onNodeSelect={setSelectedNode}
+                  svgRef={svgRef}
                 />
               </motion.div>
             ) : (

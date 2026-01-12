@@ -23,7 +23,7 @@ export class ELKLayoutEngine {
 
     // Store original graph data for preservation
     const originalNodes = new Map(graph.nodes.map(node => [node.id, node]));
-    
+
     // Convert our graph model to ELK graph format
     const elkGraph = this.convertToELKGraph(graph);
     
@@ -69,8 +69,8 @@ export class ELKLayoutEngine {
         width: node.size?.width || this.getDefaultNodeSize(node.shape).width,
         height: node.size?.height || this.getDefaultNodeSize(node.shape).height,
         // Preserve manually positioned nodes
-        x: node.isDragged ? node.position?.x : undefined,
-        y: node.isDragged ? node.position?.y : undefined,
+        x: node.isDragged && node.position ? node.position.x : undefined,
+        y: node.isDragged && node.position ? node.position.y : undefined,
         layoutOptions: node.isDragged ? {
           'elk.position': 'fixed'
         } : undefined,
@@ -111,8 +111,7 @@ export class ELKLayoutEngine {
           width: child.width || 120,
           height: child.height || 60
         },
-        isDragged: originalNode?.isDragged || false,
-        style: originalNode?.style
+        isDragged: originalNode?.isDragged || false
       };
     }) || [];
 
